@@ -3,21 +3,21 @@
 
 # Create the pod managed identity
 resource "azurerm_user_assigned_identity" "pod_user_assigned" {
-    depends_on = [
-        kubernetes_namespace.namespace
-    ]
-    resource_group_name = local.resourceGroupName
-    location            = local.location
-    name                = "mi-${local.serviceName}"
+  depends_on = [
+    kubernetes_namespace.namespace
+  ]
+  resource_group_name = local.resourceGroupName
+  location            = local.location
+  name                = "mi-${local.serviceName}"
 }
 
 # Create the Azure identity and link to managed identity
 resource "kubectl_manifest" "promotion_api_identity" {
-    depends_on = [
-      kubernetes_namespace.namespace,
-      azurerm_user_assigned_identity.pod_user_assigned
-    ]
-    yaml_body = <<YAML
+  depends_on = [
+    kubernetes_namespace.namespace,
+    azurerm_user_assigned_identity.pod_user_assigned
+  ]
+  yaml_body          = <<YAML
       apiVersion: "aadpodidentity.k8s.io/v1"
       kind: AzureIdentity
       metadata:
@@ -28,16 +28,16 @@ resource "kubectl_manifest" "promotion_api_identity" {
         resourceID: ${azurerm_user_assigned_identity.pod_user_assigned.id}
         clientID: ${azurerm_user_assigned_identity.pod_user_assigned.client_id}
       YAML
-    override_namespace = local.namespace
+  override_namespace = local.namespace
 }
 
 # Create a binding for the azure identity
 resource "kubectl_manifest" "promotion_api_identity_binding" {
-    depends_on = [
-        kubernetes_namespace.namespace,
-        azurerm_user_assigned_identity.pod_user_assigned
-    ]
-    yaml_body = <<YAML
+  depends_on = [
+    kubernetes_namespace.namespace,
+    azurerm_user_assigned_identity.pod_user_assigned
+  ]
+  yaml_body          = <<YAML
       apiVersion: "aadpodidentity.k8s.io/v1"
       kind: AzureIdentityBinding
       metadata:
@@ -47,27 +47,27 @@ resource "kubectl_manifest" "promotion_api_identity_binding" {
         azureIdentity: ${local.aadpodname}
         selector: ${local.aadpodname}
       YAML
-    override_namespace = local.namespace
+  override_namespace = local.namespace
 }
 
 # Give the new identity access
 resource "azurerm_key_vault_access_policy" "key_vault" {
-    depends_on = [
-        kubernetes_namespace.namespace,
-        azurerm_user_assigned_identity.pod_user_assigned
-    ]
-    key_vault_id = "${local.keyVaultId}"
-    tenant_id    = "${local.tenantId}"
-    object_id    = azurerm_user_assigned_identity.pod_user_assigned.principal_id
+  depends_on = [
+    kubernetes_namespace.namespace,
+    azurerm_user_assigned_identity.pod_user_assigned
+  ]
+  key_vault_id = local.keyVaultId
+  tenant_id    = local.tenantId
+  object_id    = azurerm_user_assigned_identity.pod_user_assigned.principal_id
 
-    key_permissions = [
-        "Get",
-        "List",
-    ]
+  key_permissions = [
+    "Get",
+    "List",
+  ]
 
-    secret_permissions = [
-        "Get",
-        "List",
-    ]
+  secret_permissions = [
+    "Get",
+    "List",
+  ]
 }
 

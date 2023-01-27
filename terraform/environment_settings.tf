@@ -1,4 +1,4 @@
-locals{
+locals {
   environment_settings = {
     "dev" = {
       "env" : "dev",
@@ -13,10 +13,10 @@ locals{
 
 resource "kubernetes_config_map" "enviornment_settings" {
   depends_on = [
-    kubernetes_namespace.namespace  
+    kubernetes_namespace.namespace
   ]
   metadata {
-    name = "environment_settings"
+    name      = "environment_settings"
     namespace = local.namespace
   }
   data = local.environment_settings[var.environment]
