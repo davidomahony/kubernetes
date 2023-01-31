@@ -1,19 +1,21 @@
 
 
-resource "kubernetes_service" "example" {
+resource "kubernetes_service" "api_service" {
   metadata {
-    name = "terraform-example"
+    name = "${local.service_name}-service"
+    labels = {
+      app = "${local.service_name}-service"
+      name = "${local.service_name}-service"
+    }
   }
   spec {
     selector = {
-      app = kubernetes_pod.example.metadata.0.labels.app
+      app = "${local.service_name}-service"
     }
-    session_affinity = "ClientIP"
-    port {
-      port        = 8080
-      target_port = 80
+    port{
+        name = "http"
+        value = 80
     }
-
-    type = "LoadBalancer"
+    type = "ClusterIP"
   }
 }

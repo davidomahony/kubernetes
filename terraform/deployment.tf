@@ -1,25 +1,25 @@
 
-resource "kubernetes_deployment" "api" {
+resource "kubernetes_deployment" "api_deployment" {
   metadata {
-    name = "terraform-example"
+    name = "${local.service_name}-deployment"
     labels = {
-      test = "MyExampleApp"
+      app = "${local.service_name}-deployment"
     }
   }
 
   spec {
     replicas = 3
-
     selector {
       match_labels = {
-        test = "MyExampleApp"
+        app = "${local.service_name}-service"
+        name = "${local.service_name}-service"
       }
     }
 
     template {
       metadata {
         labels = {
-          test = "MyExampleApp"
+          name = "${local.service_name}-deployment"
         }
       }
 
@@ -37,21 +37,6 @@ resource "kubernetes_deployment" "api" {
               cpu    = "250m"
               memory = "50Mi"
             }
-          }
-
-          liveness_probe {
-            http_get {
-              path = "/"
-              port = 80
-
-              http_header {
-                name  = "X-Custom-Header"
-                value = "Awesome"
-              }
-            }
-
-            initial_delay_seconds = 3
-            period_seconds        = 3
           }
         }
       }
